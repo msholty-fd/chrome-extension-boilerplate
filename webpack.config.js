@@ -5,9 +5,9 @@ module.exports = {
   devtool: "inline-source-map",
 
   entry: {
-    content: "./src/app/content.ts",
-    background: "./src/app/background.ts",
-    popup: "./src/app/ui/popup.tsx"
+    content: "./src/app/content.tsx",
+    background: "./src/app/background.tsx",
+    popup: "./src/app/popup/popup.tsx"
   },
 
   output: {
