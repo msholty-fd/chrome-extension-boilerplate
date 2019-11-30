@@ -3,6 +3,7 @@ import * as ReactDOM from "react-dom";
 import Fade from "@material-ui/core/Fade";
 import Button from "@material-ui/core/Button";
 import Modal from "@material-ui/core/Modal";
+import TextField from "@material-ui/core/TextField";
 import { makeStyles } from "@material-ui/core/styles";
 import NoteAdd from "@material-ui/icons/NoteAdd";
 
@@ -33,11 +34,27 @@ chrome.runtime.sendMessage({}, _ => {
 });
 
 function App() {
+  const username = window.location.pathname.substring(1);
+
   const classes = useStyles({});
+  const [notes, setNotes] = React.useState("");
+  const [hasFetchedNotes, setHasFetchedNotes] = React.useState(false);
   const [isModalOpen, setIsModalOpen] = React.useState(false);
+
+  React.useEffect(() => {
+    chrome.storage.local.get([username], result => {
+      setHasFetchedNotes(true);
+      setNotes(result[username]);
+    });
+  }, [hasFetchedNotes === false]);
 
   function toggleModal() {
     setIsModalOpen(!isModalOpen);
+  }
+
+  function submitNotes() {
+    chrome.storage.local.set({ [username]: notes });
+    toggleModal();
   }
 
   return (
@@ -69,11 +86,13 @@ function App() {
             <div className={classes.paper}>
               <div>
                 <h2 id="transition-modal-title">My Notes!</h2>
-                <textarea style={{ width: "100%", height: 145 }}>
-                  Default value
-                </textarea>
+                <TextField
+                  multiline
+                  value={notes}
+                  onChange={e => setNotes(e.currentTarget.value)}
+                ></TextField>
               </div>
-              <Button onClick={toggleModal}>Submit</Button>
+              <Button onClick={submitNotes}>Submit</Button>
             </div>
           </Fade>
         </Modal>
@@ -83,7 +102,7 @@ function App() {
 }
 
 // Message Listener function
-chrome.runtime.onMessage.addListener((request, sender, response) => {
+chrome.runtime.onMessage.addListener((request, _, response) => {
   // If message is injectApp
   if (request.injectApp) {
     // Inject our app to DOM and send response
@@ -95,12 +114,9 @@ chrome.runtime.onMessage.addListener((request, sender, response) => {
 });
 
 function injectApp() {
-  console.warn("omg");
   const userActions = document.querySelector('[data-testid="userActions"]');
-  // for (var tweet of tweets) {
   const newDiv = document.createElement("div");
   newDiv.setAttribute("id", "chromeExtensionReactApp");
   userActions.parentNode.insertBefore(newDiv, userActions.nextSibling);
   ReactDOM.render(<App />, newDiv);
-  // }
 }
